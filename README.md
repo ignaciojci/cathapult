@@ -69,10 +69,12 @@ Python API
 
 You can also use cathapult programmatically:
 
+```
 from cathapult.analyze import analyze_ted_summary
 
 df = analyze_ted_summary("filtered_summary.tsv")
 df.to_csv("count_cath_domains.tsv", sep="\t", index=False)
+```
 
 ⸻
 
