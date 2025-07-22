@@ -50,10 +50,6 @@ def annotate_counts(counts_df, cath_names, cath_super):
     annotated["domain.name"] = annotated["domain.name"].fillna(
         cath_super.set_index("# CATH_ID")["NAME"]
     )
-    
-    print("Counts sample:", counts_df["domain"].unique()[:5])
-    print("CATH names sample:", cath_names["CATH_ID"].unique()[:5])
-    print("CATH super sample:", cath_super["# CATH_ID"].unique()[:5])
 
     return annotated
 
