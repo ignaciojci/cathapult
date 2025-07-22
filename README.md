@@ -16,7 +16,9 @@
 ## Installation
 
 ```
-pip install cathapult
+git clone https://github.com/ignaciojci/cathapult.git
+cd cathapult
+pip install .
 ```
 
 
