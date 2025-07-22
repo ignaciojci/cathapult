@@ -31,7 +31,6 @@ Quick Start
 ```
 cathapult fetch \
   --input target_uniprot_ids.txt \
-  --summary ted_365m.domain_summary.cath.globularity.taxid.tsv.gz \
   --output output/filtered_summary.tsv
 ```
 
@@ -48,9 +47,9 @@ cathapult analyze \
 ```
 
 This will:
-	•	Count domains at full and truncated CATH ID levels.
-	•	Optionally deduplicate by gene.
-	•	Annotate using cath-names.txt and cath-superfamily-list.txt.
+- Count domains at full and truncated CATH ID levels.
+- Optionally deduplicate by gene.
+- Annotate using cath-names.txt and cath-superfamily-list.txt.
 
 ⸻
 
@@ -63,10 +62,6 @@ Plain text file with one UniProt ID per line:
 Q9Y2T3
 P38398
 ```
-
-TED domain summary
-
-Expected to be a *.tsv file as output from CATH-TED. Can be gzipped.
 
 ⸻
 
