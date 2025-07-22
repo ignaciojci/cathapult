@@ -56,7 +56,6 @@ def annotate_counts(counts_df, cath_names, cath_super):
 def analyze_ted_summary(input_tsv, output_tsv=None):
     df = pd.read_csv(input_tsv, sep="\t")
     
-    print(df["cath_label"])
     df = df[df["cath_label"] != "-"]
     df["gene"] = df["ted_id"].str.extract(r"AF-(.*)-F1")
     df["domain"] = df["cath_label"]
