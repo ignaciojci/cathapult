@@ -1,0 +1,24 @@
+[project]
+name = "cathapult"
+version = "0.1.0"
+description = "Command-line tool to pull CATH-TED summaries from UniProt IDs"
+authors = [{ name="John Carlos Ignacio", email="jignacio@broadinstitute.org" }]
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "requests",
+    "pandas"
+]
+
+[project.scripts]
+cathapult = "cathapult.cli:main"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-data]
+"cathapult.data" = ["*.txt"]
+
+[project.urls]
+Homepage = "https://github.com/ignaciojci/cathapult"
