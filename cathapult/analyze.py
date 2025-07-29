@@ -36,7 +36,11 @@ def count_domains(df, col, unique_gene=False):
     counts.columns = ["domain", "count"]
     return counts
 
-def annotate_counts(counts_df, cath_names, cath_super):
+def annotate_domains(counts_df):
+    # Load reference data
+    data_dir = Path(__file__).parent / "data"
+    cath_names, cath_super = load_reference_data(data_dir)
+    
     # Deduplicate CATH names to avoid InvalidIndexError
     cath_names_unique = cath_names.drop_duplicates(subset="CATH_ID", keep="first")
 
@@ -74,12 +78,8 @@ def analyze_ted_summary(input_tsv, output_tsv=None):
 
     combined = pd.concat(results, ignore_index=True)
 
-    # Load reference data
-    data_dir = Path(__file__).parent / "data"
-    cath_names, cath_super = load_reference_data(data_dir)
-
-    annotated = annotate_counts(combined, cath_names, cath_super)
-
+    annotated = annotate_domains(combined)
+    
     if output_tsv:
         annotated.to_csv(output_tsv, sep="\t", index=False)
         print(f"Saved annotated domain counts to {output_tsv}")
