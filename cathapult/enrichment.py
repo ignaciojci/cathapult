@@ -68,12 +68,12 @@ def calculate_odds_ratio(df1, df2, unique_features=False):
 
         results.append({
             'feature': feature,
-            'grpA_count' : a,
-            'grpA_total': b,
-            'grpB_count' : c,
-            'grpB_total' : d,
-            'grpA_proportion' : a/b,
-            'grpB_proportion' : c/d,
+            'grp1_count' : a,
+            'grp1_total': b,
+            'grp2_count' : c,
+            'grp2_total' : d,
+            'grp1_proportion' : a/b,
+            'grp2_proportion' : c/d,
             'odds.ratio' : odds_ratio,
             'log.odds.ratio': np.log2(odds_ratio),
             'p.value': p_value,
