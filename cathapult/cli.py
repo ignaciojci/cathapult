@@ -1,7 +1,7 @@
 import argparse
 import os
 import pandas as pd
-from .fetcher import fetch_ted_summary
+from .fetcher import fetch_ted_summary, filter_ted_summary
 from .analyze import analyze_ted_summary
 from .enrichment import calculate_odds_ratio, plot_odds_ratio
 
@@ -57,6 +57,38 @@ def cli_odds_ratio(args):
     else:
         print("No features found to plot.")
 
+def cli_filter(args):
+    """Handler for the 'filter' command."""
+    gzipped_file = args.domain_summary_file or os.getenv("DOMAIN_SUMMARY_FILE")
+
+    if not gzipped_file:
+        raise ValueError(
+            "Domain summary file not specified.\n"
+            "Provide it as a positional argument or set the DOMAIN_SUMMARY_FILE environment variable."
+        )
+
+    if not os.path.exists(gzipped_file):
+        raise FileNotFoundError(f"Domain summary file not found: {gzipped_file}")
+
+    print(f"Filtering '{gzipped_file}' using UniProt IDs from '{args.uniprot_ids}'...")
+    
+    uniprot_id_file = args.uniprot_ids
+    with open(uniprot_id_file) as f:
+        uniprot_ids = set(line.strip() for line in f if line.strip())
+    
+    df = filter_ted_summary(
+        target_ids=uniprot_ids,
+        ted_db_gz=gzipped_file,
+        filter_keyword=args.keyword
+    )
+    print(f"Filtered {len(df)} rows.")
+
+    if args.output_file:
+        df.to_csv(args.output_file, sep='\t', index=False)
+        print(f"Results saved to: {args.output_file}")
+    else:
+        print(df)  # Preview if no output
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(description="CATH-TED domain fetcher and analyzer")
@@ -103,7 +135,25 @@ def main():
         help="Significance level (alpha) for coloring plot points (default: 0.05)."
     )
     or_parser.set_defaults(func=cli_odds_ratio)
-
+    
+    # Filter subcommand
+    filter_parser = subparsers.add_parser("filter", help="Filter a gzipped domain summary file by UniProt IDs and keyword")
+    
+    filter_parser.add_argument("uniprot_ids", help="Path to text file with UniProt IDs (one per line)")
+    filter_parser.add_argument(
+        "--domain_summary_file", nargs="?",  # <-- make positional argument optional
+        help="Path to the gzipped domain summary file (e.g., .tsv.gz). "
+        "If not provided, will use the DOMAIN_SUMMARY_FILE environment variable."
+)
+    filter_parser.add_argument(
+        "--keyword", default="sapiens",
+        help="Keyword to filter for (default: 'sapiens')"
+    )
+    filter_parser.add_argument(
+        "--output_file", help="Optional output TSV file to save the filtered result"
+    )
+    filter_parser.set_defaults(func=cli_filter)
+    
     # Parse and dispatch
     args = parser.parse_args()
     args.func(args)
