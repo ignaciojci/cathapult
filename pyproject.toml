@@ -1,6 +1,6 @@
 [project]
 name = "cathapult"
-version = "0.1.1" # Incremented version to reflect new features
+version = "0.1.2" # Incremented version to reflect new features
 description = "Command-line tool to pull CATH-TED summaries from UniProt IDs"
 authors = [{ name="John Carlos Ignacio", email="jignacio@broadinstitute.org" }]
 readme = "README.md"
