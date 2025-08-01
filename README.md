@@ -42,8 +42,7 @@ cathapult fetch target_uniprot_ids.txt output/summary.tsv
 
 ### 2. Filter a large CATH-TED domain summary file
 
-If you already have a large domain summary file e.g., this large file, `ted_365m.domain_summary.cath.globularity.taxid.tsv.gz` link[https://zenodo.org/records/13908086], 
-you can filter it by your target UniProt IDs and an optional keyword (default: `"sapiens"`).
+If you already have a large domain summary file e.g., this large file, [`ted_365m.domain_summary.cath.globularity.taxid.tsv.gz`](https://zenodo.org/records/13908086), you can filter it by your target UniProt IDs and an optional keyword (default: `"sapiens"`).
 
 ```bash
 cathapult filter target_uniprot_ids.txt --domain_summary_file path/to/domain_summary.tsv.gz --keyword sapiens --output_file filtered.tsv
