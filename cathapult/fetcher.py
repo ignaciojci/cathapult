@@ -78,7 +78,7 @@ def filter_ted_summary(
     if lines:
         data_str = ''.join(lines)
         df = pd.read_csv(StringIO(data_str), sep='\t', names=TED_COLUMNS)
-        df['uniprot_id'] = output_ids
+        df['uniprot_acc'] = output_ids
         return df
     else:
         return pd.DataFrame(columns=TED_COLUMNS)  # Empty if no match
