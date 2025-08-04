@@ -19,9 +19,7 @@ It streamlines the extraction of domain summaries, counts domain occurrences, an
 ## Installation
 
 ```bash
-git clone https://github.com/ignaciojci/cathapult.git
-cd cathapult
-pip install .
+pip install git+https://github.com/ignaciojci/cathapult.git
 ```
 
 ---
