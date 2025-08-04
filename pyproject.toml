@@ -26,9 +26,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.package-data]
 "cathapult.data" = ["*.txt"]
-# Only include needed data files if you want (but here you don't)
-# You can also explicitly exclude the data folder
-"cathapult" = ["!data/*"]
+"cathapult" = ["data/*"]
 
 [project.urls]
 Homepage = "https://github.com/ignaciojci/cathapult"
