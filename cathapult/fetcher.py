@@ -21,10 +21,10 @@ def fetch_ted_summary(uniprot_id, timeout=10, delay=1):
     return []
 
 def get_ted_domains():
-    path = os.getenv("TED_DOMAINS")
+    path = os.getenv("DOMAIN_SUMMARY_FILE")
     if path is None:
         raise EnvironmentError(
-            "Environment variable 'TED_DOMAINS' not set.\n"
+            "Environment variable 'DOMAIN_SUMMARY_FILE' not set.\n"
             "Please set it to the path of 'ted_365m.domain_summary.cath.globularity.taxid.tsv.gz'."
         )
     if not os.path.exists(path):

@@ -7,6 +7,16 @@ from .analyze import analyze_ted_summary
 from .enrichment import calculate_odds_ratio, plot_odds_ratio
 from .db import create_db, query_by_uniprot_ids
 
+def check_db_env(gzipped_file):
+    gzipped_file = gzipped_file or os.getenv("DOMAIN_SUMMARY_FILE")
+
+    if not gzipped_file:
+        raise ValueError(
+            "Domain summary file not specified.\n"
+            "Provide it as a positional argument or set the DOMAIN_SUMMARY_FILE environment variable."
+        )
+    return(gzipped_file)
+
 def cli_fetch(args):
     """Handler for the 'fetch' command."""
     if args.output_file:
@@ -61,7 +71,7 @@ def cli_odds_ratio(args):
 
 def cli_filter(args):
     """Handler for the 'filter' command."""
-    gzipped_file = args.domain_summary_file or os.getenv("DOMAIN_SUMMARY_FILE")
+    gzipped_file = check_db_env(args.domain_summary_file)
 
     if not gzipped_file:
         raise ValueError(
@@ -92,18 +102,22 @@ def cli_filter(args):
         print(df)  # Preview if no output
 
 def cli_setup_db(args):
+    db_path = check_db_env(args.db_path)
+    
     """Handler for setting up the local DB."""
-    db_path = args.db_path or os.path.splitext(args.tsv_gz_file)[0] + ".duckdb"
+    db_path = str(Path(db_path).with_suffix(".duckdb"))
     print(f"Creating database at: {db_path}")
     create_db(tsv_gz_path=args.tsv_gz_file, db_path=db_path, overwrite=args.overwrite)
     print("Database creation completed.")
 
 def cli_query_db(args):
     """Handler for querying the DB using UniProt IDs."""
+    db_path = check_db_env(args.db_path)
+    
     with open(args.uniprot_ids) as f:
         uniprot_ids = [line.strip() for line in f if line.strip()]
     
-    db_path = str(Path(args.db_path).with_suffix(".duckdb"))
+    db_path = str(Path(db_path).with_suffix(".duckdb"))
     print(f"Querying {len(uniprot_ids)} UniProt IDs from database: {args.db_path}")
     df = query_by_uniprot_ids(uniprot_ids=uniprot_ids, db_path=db_path, keyword=args.keyword)
 
@@ -167,7 +181,7 @@ def main():
     
     filter_parser.add_argument("uniprot_ids", help="Path to text file with UniProt IDs (one per line)")
     filter_parser.add_argument(
-        "--domain_summary_file", nargs="?",  # <-- make positional argument optional
+        "--domain_summary_file", nargs="?",
         help="Path to the gzipped domain summary file (e.g., .tsv.gz). "
         "If not provided, will use the DOMAIN_SUMMARY_FILE environment variable."
 )
@@ -176,20 +190,28 @@ def main():
         help="Keyword to filter for (default: 'Human')"
     )
     filter_parser.add_argument(
-        "--output_file", help="Optional output TSV file to save the filtered result"
+        "output_file", help="Output TSV file to save the filtered result"
     )
     filter_parser.set_defaults(func=cli_filter)
     
     # Setup-db subcommand
     setup_parser = subparsers.add_parser("setup-db", help="Create DuckDB from a TSV.GZ domain summary file")
-    setup_parser.add_argument("tsv_gz_file", help="Path to the domain summary .tsv.gz file")
+    setup_parser.add_argument(
+        "--tsv_gz_file", nargs="?",
+        help="Path to the gzipped domain summary file (e.g., .tsv.gz). "
+        "If not provided, will use the DOMAIN_SUMMARY_FILE environment variable."
+    )
     setup_parser.add_argument("--db_path", help="Output DB file path (default: same name with .duckdb)")
     setup_parser.add_argument("--overwrite", action='store_true', help="Optional flag to overwrite existing database")
     setup_parser.set_defaults(func=cli_setup_db)
 
     # Query subcommand
     query_parser = subparsers.add_parser("query", help="Query DuckDB using UniProt IDs and optional keyword filter")
-    query_parser.add_argument("db_path", help="Path to the DuckDB file")
+    query_parser.add_argument(
+        "--db_path", nargs="?",
+        help="Path to the DuckDB file OR the gzipped domain summary file. "
+        "If not provided, will use the DOMAIN_SUMMARY_FILE environment variable."
+    )
     query_parser.add_argument("uniprot_ids", help="Text file with UniProt IDs (one per line)")
     query_parser.add_argument("--keyword", default=None, help="Optional keyword filter (e.g., 'Human')")
     query_parser.add_argument("--output_file", help="Optional TSV output file")
