@@ -19,6 +19,7 @@ It streamlines the extraction of domain summaries, counts domain occurrences, an
 ## Installation
 
 ```bash
+pip install --only-binary :all: duckdb # requirement
 pip install git+https://github.com/ignaciojci/cathapult.git
 ```
 

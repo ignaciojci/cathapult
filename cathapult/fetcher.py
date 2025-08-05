@@ -58,7 +58,7 @@ TED_COLUMNS = [
 def filter_ted_summary(
     target_ids,
     ted_db_gz: str,
-    filter_keyword: str = "sapiens",
+    filter_keyword: str = "Human",
     total_lines: int = 364_806_077
 ) -> pd.DataFrame:
     # Collect matching lines in memory

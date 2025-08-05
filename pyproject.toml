@@ -11,7 +11,8 @@ dependencies = [
     "scipy",
     "statsmodels",
     "matplotlib",
-    "tqdm"
+    "tqdm",
+    "duckdb",
 ]
 
 [project.scripts]

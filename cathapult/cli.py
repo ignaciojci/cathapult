@@ -1,9 +1,11 @@
 import argparse
 import os
 import pandas as pd
+from pathlib import Path
 from .fetcher import fetch_ted_summary, filter_ted_summary
 from .analyze import analyze_ted_summary
 from .enrichment import calculate_odds_ratio, plot_odds_ratio
+from .db import create_db, query_by_uniprot_ids
 
 def cli_fetch(args):
     """Handler for the 'fetch' command."""
@@ -89,6 +91,30 @@ def cli_filter(args):
     else:
         print(df)  # Preview if no output
 
+def cli_setup_db(args):
+    """Handler for setting up the local DB."""
+    db_path = args.db_path or os.path.splitext(args.tsv_gz_file)[0] + ".duckdb"
+    print(f"Creating database at: {db_path}")
+    create_db(tsv_gz_path=args.tsv_gz_file, db_path=db_path, overwrite=args.overwrite)
+    print("Database creation completed.")
+
+def cli_query_db(args):
+    """Handler for querying the DB using UniProt IDs."""
+    with open(args.uniprot_ids) as f:
+        uniprot_ids = [line.strip() for line in f if line.strip()]
+    
+    db_path = str(Path(args.db_path).with_suffix(".duckdb"))
+    print(f"Querying {len(uniprot_ids)} UniProt IDs from database: {args.db_path}")
+    df = query_by_uniprot_ids(uniprot_ids=uniprot_ids, db_path=db_path, keyword=args.keyword)
+
+    print(f"Number of matching rows: {len(df)}")
+
+    if args.output_file:
+        df.to_csv(args.output_file, sep='\t', index=False)
+        print(f"Results saved to: {args.output_file}")
+    else:
+        print(df.head())  # preview only
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(description="CATH-TED domain fetcher and analyzer")
@@ -106,7 +132,7 @@ def main():
     analyze_parser.add_argument("output_file", help="Output TSV file with domain counts and annotations")
     analyze_parser.set_defaults(func=cli_analyze)
 
-    # NEW: Odds-ratio subcommand
+    # Odds-ratio subcommand
     or_parser = subparsers.add_parser(
         "odds-ratio",
         help="Compute and visualize odds ratio of enriched features between two groups."
@@ -146,17 +172,32 @@ def main():
         "If not provided, will use the DOMAIN_SUMMARY_FILE environment variable."
 )
     filter_parser.add_argument(
-        "--keyword", default="sapiens",
-        help="Keyword to filter for (default: 'sapiens')"
+        "--keyword", default="Human",
+        help="Keyword to filter for (default: 'Human')"
     )
     filter_parser.add_argument(
         "--output_file", help="Optional output TSV file to save the filtered result"
     )
     filter_parser.set_defaults(func=cli_filter)
     
+    # Setup-db subcommand
+    setup_parser = subparsers.add_parser("setup-db", help="Create DuckDB from a TSV.GZ domain summary file")
+    setup_parser.add_argument("tsv_gz_file", help="Path to the domain summary .tsv.gz file")
+    setup_parser.add_argument("--db_path", help="Output DB file path (default: same name with .duckdb)")
+    setup_parser.add_argument("--overwrite", action='store_true', help="Optional flag to overwrite existing database")
+    setup_parser.set_defaults(func=cli_setup_db)
+
+    # Query subcommand
+    query_parser = subparsers.add_parser("query", help="Query DuckDB using UniProt IDs and optional keyword filter")
+    query_parser.add_argument("db_path", help="Path to the DuckDB file")
+    query_parser.add_argument("uniprot_ids", help="Text file with UniProt IDs (one per line)")
+    query_parser.add_argument("--keyword", default=None, help="Optional keyword filter (e.g., 'Human')")
+    query_parser.add_argument("--output_file", help="Optional TSV output file")
+    query_parser.set_defaults(func=cli_query_db)
+
     # Parse and dispatch
     args = parser.parse_args()
     args.func(args)
-
+    
 if __name__ == '__main__':
     main()
