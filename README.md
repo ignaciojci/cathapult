@@ -5,7 +5,7 @@
 It provides two main workflows:
 
 1.  **Direct fetching** from APIs for small sets of proteins.
-2.  **High-performance local querying** against a pre-built DuckDB database for handling massive, gigabyte-scale domain summary files with millisecond response times.
+2.  **High-performance local querying** against a pre-built DuckDB database for handling massive, gigabyte-scale domain summary files with response times in a few seconds.
 
 -----
 
@@ -13,7 +13,7 @@ It provides two main workflows:
 
   * **Fetch** domain summaries for specific UniProt IDs from CATH-TED.
   * **Build** a local, compressed DuckDB database from a massive domain summary file.
-  * **Query** the local database to filter millions of rows by UniProt IDs and keywords in milliseconds.
+  * **Query** the local database to filter millions of rows by UniProt IDs and keywords in a few seconds.
   * **Filter** large summary files directly (in-memory) without a database.
   * **Count** CATH domains at multiple hierarchy levels.
   * **Annotate** domain IDs with human-readable names.
