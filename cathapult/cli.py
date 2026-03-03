@@ -5,7 +5,7 @@ from pathlib import Path
 from .fetcher import fetch_ted_summary, filter_ted_summary
 from .analyze import analyze_ted_summary
 from .enrichment import calculate_odds_ratio, plot_odds_ratio
-from .db import create_db, query_by_uniprot_ids
+from .db import create_db, query_by_uniprot_ids, query_excluding_uniprot_ids
 
 def check_db_env(gzipped_file):
     gzipped_file = gzipped_file or os.getenv("DOMAIN_SUMMARY_FILE")
@@ -118,16 +118,26 @@ def cli_query_db(args):
         uniprot_ids = [line.strip() for line in f if line.strip()]
     
     db_path = str(Path(db_path).with_suffix(".duckdb"))
-    print(f"Querying {len(uniprot_ids)} UniProt IDs from database: {args.db_path}")
-    df = query_by_uniprot_ids(uniprot_ids=uniprot_ids, db_path=db_path, keyword=args.keyword)
+    
+    # Choose function based on the --exclude flag
+    if args.exclude:
+        print(f"Querying entries EXCLUDING {len(uniprot_ids)} UniProt IDs...")
+        df = query_excluding_uniprot_ids(
+            db_path=db_path, 
+            uniprot_ids=uniprot_ids, 
+            tax_id=args.tax_id
+        )
+    else:
+        print(f"Querying {len(uniprot_ids)} matching UniProt IDs...")
+        df = query_by_uniprot_ids(db_path=db_path, uniprot_ids=uniprot_ids, keyword=args.keyword)
 
-    print(f"Number of matching rows: {len(df)}")
+    print(f"Number of rows found: {len(df)}")
 
     if args.output_file:
         df.to_csv(args.output_file, sep='\t', index=False)
         print(f"Results saved to: {args.output_file}")
     else:
-        print(df.head())  # preview only
+        print(df.head())
 
 def main():
     """Main CLI entry point."""
@@ -212,6 +222,12 @@ def main():
         help="Path to the DuckDB file OR the gzipped domain summary file. "
         "If not provided, will use the DOMAIN_SUMMARY_FILE environment variable."
     )
+    query_parser.add_argument(
+        "--exclude", 
+        action='store_true', 
+        help="Exclude the provided UniProt IDs instead of matching them"
+    )
+    query_parser.add_argument("--tax_id", type=int, help="Filter by NCBI Taxonomy ID (e.g., 9606 for Human)")
     query_parser.add_argument("uniprot_ids", help="Text file with UniProt IDs (one per line)")
     query_parser.add_argument("--keyword", default=None, help="Optional keyword filter (e.g., 'Human')")
     query_parser.add_argument("--output_file", help="Optional TSV output file")

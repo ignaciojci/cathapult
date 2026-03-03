@@ -92,6 +92,8 @@ def create_db(tsv_gz_path: str, db_path: str = None, overwrite: bool = False) ->
             cath_assignment_method,
             tax_common_name,
             tax_scientific_name,
+            -- Extract and create tax_id ID column
+            CAST(regexp_extract("proteome-id", 'tax_id-(\d+)', 1) AS INTEGER) AS tax_id,
             -- Also create the new uniprot_acc column
             regexp_extract(ted_id, 'AF-([A-Z0-9]+)', 1) AS uniprot_acc
         FROM read_csv(
@@ -108,7 +110,8 @@ def create_db(tsv_gz_path: str, db_path: str = None, overwrite: bool = False) ->
     return Path(db_path)
 
 
-def query_by_uniprot_ids(db_path: str, uniprot_ids: List[str], keyword: Optional[str] = None) -> pd.DataFrame:
+def query_by_uniprot_ids(db_path: str, uniprot_ids: List[str], keyword: Optional[str] = None, 
+    tax_id: Optional[int] = None) -> pd.DataFrame:
     con = duckdb.connect(db_path)
     id_list_str = ', '.join(f"'{id}'" for id in uniprot_ids)
     query = f"""
@@ -118,6 +121,42 @@ def query_by_uniprot_ids(db_path: str, uniprot_ids: List[str], keyword: Optional
     if keyword:
         query += f" AND tax_common_name ILIKE '%{keyword}%'"
 
-    df = con.execute(query).fetchdf()
+    params = []
+    if tax_id:
+        # Integer comparison is extremely fast
+        query += " AND main.tax_id = ?"
+        params.append(tax_id)
+
+    df = con.execute(query, params).fetchdf()
+    con.close()
+    return df
+
+
+def query_excluding_uniprot_ids(
+    db_path: str, 
+    uniprot_ids: List[str], 
+    tax_id: Optional[int] = None
+) -> pd.DataFrame:
+    con = duckdb.connect(db_path)
+    
+    # Register exclusion list as a virtual table
+    ids_df = pd.DataFrame({'uniprot_acc': uniprot_ids})
+    con.register('exclude_list', ids_df)
+    
+    # We use a LEFT JOIN and then filter for rows that DID NOT find a match
+    # 'ex.uniprot_acc IS NULL' identifies the rows in 'main' not in 'exclude_list'
+    query = """
+        SELECT main.* FROM domain_summary main
+        LEFT JOIN exclude_list ex 
+            ON main.uniprot_acc = ex.uniprot_acc
+        WHERE ex.uniprot_acc IS NULL
+    """
+    
+    params = []
+    if tax_id:
+        query += " AND main.tax_id = ?"
+        params.append(tax_id)
+
+    df = con.execute(query, params).fetchdf()
     con.close()
     return df
